@@ -1,0 +1,80 @@
+[
+  {
+    "scenario_id": "P-001",
+    "description": "Complete closeout package, approval still pending",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": true,
+    "final_invoice_pdf": true,
+    "closeout_memo_pdf": true,
+    "monday_stage": "Closed",
+    "monday_case_status": "Active",
+    "latest_comment": "Final approval pending."
+  },
+  {
+    "scenario_id": "P-002",
+    "description": "Complete closeout package, approval still pending",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": true,
+    "final_invoice_pdf": true,
+    "closeout_memo_pdf": true,
+    "monday_stage": "Closed",
+    "monday_case_status": "Active",
+    "latest_comment": "Final approval pending."
+  },
+  {
+    "scenario_id": "P-003",
+    "description": "Only title policy remains pending",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": false,
+    "final_invoice_pdf": false,
+    "closeout_memo_pdf": false,
+    "monday_stage": "Missing Title Policy",
+    "monday_case_status": "Active",
+    "latest_comment": "Only the title policy remains pending."
+  },
+  {
+    "scenario_id": "P-004",
+    "description": "Complete closeout package, approval still pending",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": true,
+    "final_invoice_pdf": true,
+    "closeout_memo_pdf": true,
+    "monday_stage": "Closed",
+    "monday_case_status": "Active",
+    "latest_comment": "Final approval pending."
+  },
+  {
+    "scenario_id": "P-005",
+    "description": "Title policy arrived but workflow remains on hold and stage is stale",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": true,
+    "final_invoice_pdf": false,
+    "closeout_memo_pdf": false,
+    "monday_stage": "Missing Title Policy",
+    "monday_case_status": "On hold",
+    "latest_comment": "Hold reminders until further notice."
+  },
+  {
+    "scenario_id": "P-006",
+    "description": "Complete closeout package, approval still pending",
+    "recorded_judgment": true,
+    "recorded_release": true,
+    "proof_of_deposit": true,
+    "title_policy": true,
+    "final_invoice_pdf": true,
+    "closeout_memo_pdf": true,
+    "monday_stage": "Closed",
+    "monday_case_status": "Active",
+    "latest_comment": "Final approval pending."
+  }
+]
