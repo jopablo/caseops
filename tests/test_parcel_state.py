@@ -3,7 +3,6 @@ from pathlib import Path
 
 from caseops.rules.parcel_state import (
     BlockerCode,
-    DataQualityIssue,
     DocumentaryState,
     OperationalState,
     ParcelEvidence,
@@ -59,7 +58,6 @@ def test_title_policy_received_while_on_hold_does_not_auto_close():
     assert decision.operational_state == OperationalState.ON_HOLD
     assert decision.blocker == BlockerCode.ON_HOLD
     assert decision.next_action == "CONFIRM_HOLD_STATUS"
-    assert DataQualityIssue.MONDAY_STAGE_STALE in decision.data_quality_issues
 
 
 def test_draft_closeout_does_not_count_as_final_closeout():

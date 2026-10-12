@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple
 
 
 class DocumentaryState(str, Enum):
@@ -27,10 +26,6 @@ class BlockerCode(str, Enum):
     APPROVAL_PENDING = "APPROVAL_PENDING"
 
 
-class DataQualityIssue(str, Enum):
-    MONDAY_STAGE_STALE = "MONDAY_STAGE_STALE"
-
-
 @dataclass(frozen=True)
 class ParcelEvidence:
     recorded_judgment: bool
@@ -50,7 +45,6 @@ class ParcelDecision:
     operational_state: OperationalState
     blocker: BlockerCode
     next_action: str
-    data_quality_issues: Tuple[DataQualityIssue, ...] = ()
 
 
 def _normalize(value: str) -> str:
@@ -80,18 +74,12 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
     case_status = _normalize(e.monday_case_status)
     comment = _normalize(e.latest_comment)
 
-    issues = []
-
-    if e.title_policy and "missing title policy" in stage:
-        issues.append(DataQualityIssue.MONDAY_STAGE_STALE)
-
     if "hold" in case_status or "hold" in comment:
         return ParcelDecision(
             documentary_state=documentary_state,
             operational_state=OperationalState.ON_HOLD,
             blocker=BlockerCode.ON_HOLD,
             next_action="CONFIRM_HOLD_STATUS",
-            data_quality_issues=tuple(issues),
         )
 
     if not e.title_policy:
@@ -100,7 +88,6 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
             operational_state=OperationalState.AWAITING_TITLE_POLICY,
             blocker=BlockerCode.TITLE_POLICY_MISSING,
             next_action="FOLLOW_UP_TITLE_POLICY",
-            data_quality_issues=tuple(issues),
         )
 
     if "approval" in comment and "pending" in comment:
@@ -109,7 +96,6 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
             operational_state=OperationalState.PENDING_APPROVAL,
             blocker=BlockerCode.APPROVAL_PENDING,
             next_action="AWAIT_APPROVAL",
-            data_quality_issues=tuple(issues),
         )
 
     if documentary_state == DocumentaryState.COMPLETE and "closed" in stage:
@@ -118,7 +104,6 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
             operational_state=OperationalState.CLOSED,
             blocker=BlockerCode.NONE,
             next_action="NONE",
-            data_quality_issues=tuple(issues),
         )
 
     if documentary_state == DocumentaryState.READY_FOR_CLOSEOUT:
@@ -127,7 +112,6 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
             operational_state=OperationalState.ACTIVE,
             blocker=BlockerCode.NONE,
             next_action="FINALIZE_CLOSEOUT_PACKAGE",
-            data_quality_issues=tuple(issues),
         )
 
     return ParcelDecision(
@@ -135,5 +119,4 @@ def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
         operational_state=OperationalState.ACTIVE,
         blocker=BlockerCode.DOCUMENT_MISSING,
         next_action="REVIEW_MISSING_DOCUMENTS",
-        data_quality_issues=tuple(issues),
     )
