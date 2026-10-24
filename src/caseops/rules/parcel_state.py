@@ -43,6 +43,8 @@ class ParcelEvidence:
 class ParcelDecision:
     documentary_state: DocumentaryState
     operational_state: OperationalState
+    documentary_blocker: BlockerCode
+    operational_blocker: BlockerCode
     blocker: BlockerCode
     next_action: str
 
@@ -52,11 +54,7 @@ def _normalize(value: str) -> str:
 
 
 def evaluate_documentary_state(e: ParcelEvidence) -> DocumentaryState:
-    prerequisites = (
-        e.recorded_judgment
-        and e.recorded_release
-        and e.proof_of_deposit
-    )
+    prerequisites = e.recorded_judgment and e.recorded_release and e.proof_of_deposit
 
     if not prerequisites or not e.title_policy:
         return DocumentaryState.INCOMPLETE
@@ -67,56 +65,55 @@ def evaluate_documentary_state(e: ParcelEvidence) -> DocumentaryState:
     return DocumentaryState.READY_FOR_CLOSEOUT
 
 
+def _documentary_blocker(e: ParcelEvidence) -> BlockerCode:
+    prerequisites = e.recorded_judgment and e.recorded_release and e.proof_of_deposit
+    if not prerequisites:
+        return BlockerCode.DOCUMENT_MISSING
+    if not e.title_policy:
+        return BlockerCode.TITLE_POLICY_MISSING
+    return BlockerCode.NONE
+
+
 def evaluate_parcel(e: ParcelEvidence) -> ParcelDecision:
     documentary_state = evaluate_documentary_state(e)
+    documentary_blocker = _documentary_blocker(e)
 
     stage = _normalize(e.monday_stage)
     case_status = _normalize(e.monday_case_status)
     comment = _normalize(e.latest_comment)
 
+    operational_state = OperationalState.ACTIVE
+    operational_blocker = BlockerCode.NONE
+    next_action = "REVIEW_MISSING_DOCUMENTS"
+
     if "hold" in case_status or "hold" in comment:
-        return ParcelDecision(
-            documentary_state=documentary_state,
-            operational_state=OperationalState.ON_HOLD,
-            blocker=BlockerCode.ON_HOLD,
-            next_action="CONFIRM_HOLD_STATUS",
-        )
+        operational_state = OperationalState.ON_HOLD
+        operational_blocker = BlockerCode.ON_HOLD
+        next_action = "CONFIRM_HOLD_STATUS"
+    elif documentary_blocker == BlockerCode.TITLE_POLICY_MISSING:
+        operational_state = OperationalState.AWAITING_TITLE_POLICY
+        next_action = "FOLLOW_UP_TITLE_POLICY"
+    elif "approval" in comment and "pending" in comment:
+        operational_state = OperationalState.PENDING_APPROVAL
+        operational_blocker = BlockerCode.APPROVAL_PENDING
+        next_action = "AWAIT_APPROVAL"
+    elif documentary_state == DocumentaryState.COMPLETE and "closed" in stage:
+        operational_state = OperationalState.CLOSED
+        next_action = "NONE"
+    elif documentary_state == DocumentaryState.READY_FOR_CLOSEOUT:
+        next_action = "FINALIZE_CLOSEOUT_PACKAGE"
 
-    if not e.title_policy:
-        return ParcelDecision(
-            documentary_state=documentary_state,
-            operational_state=OperationalState.AWAITING_TITLE_POLICY,
-            blocker=BlockerCode.TITLE_POLICY_MISSING,
-            next_action="FOLLOW_UP_TITLE_POLICY",
-        )
-
-    if "approval" in comment and "pending" in comment:
-        return ParcelDecision(
-            documentary_state=documentary_state,
-            operational_state=OperationalState.PENDING_APPROVAL,
-            blocker=BlockerCode.APPROVAL_PENDING,
-            next_action="AWAIT_APPROVAL",
-        )
-
-    if documentary_state == DocumentaryState.COMPLETE and "closed" in stage:
-        return ParcelDecision(
-            documentary_state=documentary_state,
-            operational_state=OperationalState.CLOSED,
-            blocker=BlockerCode.NONE,
-            next_action="NONE",
-        )
-
-    if documentary_state == DocumentaryState.READY_FOR_CLOSEOUT:
-        return ParcelDecision(
-            documentary_state=documentary_state,
-            operational_state=OperationalState.ACTIVE,
-            blocker=BlockerCode.NONE,
-            next_action="FINALIZE_CLOSEOUT_PACKAGE",
-        )
+    blocker = (
+        operational_blocker
+        if operational_blocker != BlockerCode.NONE
+        else documentary_blocker
+    )
 
     return ParcelDecision(
         documentary_state=documentary_state,
-        operational_state=OperationalState.ACTIVE,
-        blocker=BlockerCode.DOCUMENT_MISSING,
-        next_action="REVIEW_MISSING_DOCUMENTS",
+        operational_state=operational_state,
+        documentary_blocker=documentary_blocker,
+        operational_blocker=operational_blocker,
+        blocker=blocker,
+        next_action=next_action,
     )
