@@ -3,7 +3,6 @@ from pathlib import Path
 
 from caseops.rules.parcel_state import (
     BlockerCode,
-    DataQualityIssue,
     DocumentaryState,
     OperationalState,
     ParcelEvidence,
@@ -37,6 +36,8 @@ def test_complete_cases_can_be_document_complete_but_pending_approval():
         decision = evaluate_parcel(build_evidence(case))
         assert decision.documentary_state == DocumentaryState.COMPLETE
         assert decision.operational_state == OperationalState.PENDING_APPROVAL
+        assert decision.documentary_blocker == BlockerCode.NONE
+        assert decision.operational_blocker == BlockerCode.APPROVAL_PENDING
         assert decision.blocker == BlockerCode.APPROVAL_PENDING
         assert decision.next_action == "AWAIT_APPROVAL"
 
@@ -47,19 +48,22 @@ def test_missing_title_policy_blocks_closeout():
 
     assert decision.documentary_state == DocumentaryState.INCOMPLETE
     assert decision.operational_state == OperationalState.AWAITING_TITLE_POLICY
+    assert decision.documentary_blocker == BlockerCode.TITLE_POLICY_MISSING
+    assert decision.operational_blocker == BlockerCode.NONE
     assert decision.blocker == BlockerCode.TITLE_POLICY_MISSING
     assert decision.next_action == "FOLLOW_UP_TITLE_POLICY"
 
 
-def test_title_policy_received_while_on_hold_does_not_auto_close():
+def test_missing_title_policy_can_coexist_with_operational_hold():
     case = load_cases()[4]
     decision = evaluate_parcel(build_evidence(case))
 
-    assert decision.documentary_state == DocumentaryState.READY_FOR_CLOSEOUT
+    assert decision.documentary_state == DocumentaryState.INCOMPLETE
     assert decision.operational_state == OperationalState.ON_HOLD
+    assert decision.documentary_blocker == BlockerCode.TITLE_POLICY_MISSING
+    assert decision.operational_blocker == BlockerCode.ON_HOLD
     assert decision.blocker == BlockerCode.ON_HOLD
     assert decision.next_action == "CONFIRM_HOLD_STATUS"
-    assert DataQualityIssue.MONDAY_STAGE_STALE in decision.data_quality_issues
 
 
 def test_draft_closeout_does_not_count_as_final_closeout():
@@ -79,4 +83,6 @@ def test_draft_closeout_does_not_count_as_final_closeout():
 
     assert decision.documentary_state == DocumentaryState.READY_FOR_CLOSEOUT
     assert decision.operational_state == OperationalState.ACTIVE
+    assert decision.documentary_blocker == BlockerCode.NONE
+    assert decision.operational_blocker == BlockerCode.NONE
     assert decision.next_action == "FINALIZE_CLOSEOUT_PACKAGE"
