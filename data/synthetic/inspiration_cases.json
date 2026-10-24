@@ -53,11 +53,11 @@
   },
   {
     "scenario_id": "P-005",
-    "description": "Title policy arrived but workflow remains on hold and stage is stale",
+    "description": "Title policy remains missing while case is operationally on hold",
     "recorded_judgment": true,
     "recorded_release": true,
     "proof_of_deposit": true,
-    "title_policy": true,
+    "title_policy": false,
     "final_invoice_pdf": false,
     "closeout_memo_pdf": false,
     "monday_stage": "Missing Title Policy",
