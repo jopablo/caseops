@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - "v0.1-*"
+      - "v0.*"
   pull_request:
     branches:
       - main
